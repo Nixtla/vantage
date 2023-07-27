@@ -10,7 +10,7 @@ import os
 
 
 # Fetching data with caching
-@st.cache_data(ttl=100)
+@st.cache_data(ttl=1000)
 def fetch_data(url, headers):
     response = requests.get(url, headers=headers)
     return response.json()
