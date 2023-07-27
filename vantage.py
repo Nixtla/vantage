@@ -168,12 +168,43 @@ with st.spinner('Sending POST request and retrieving new data for the selected s
     st.plotly_chart(fig_service)
 st.success('Plot for the selected service created successfully!')
 
+
+# Modify the add_confidence_interval function to mark points outside the confidence interval in red
+def add_confidence_interval(fig, x, lower_bound, upper_bound):
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=lower_bound,
+        fill=None,
+        mode='lines',
+        line_color='rgba(68, 68, 68, 0.2)',
+        name='90% Confidence Interval'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=upper_bound,
+        fill='tonexty',  # Fill area between trace0 and trace1
+        mode='lines',
+        line_color='rgba(68, 68, 68, 0.2)',
+        name='90% Confidence Interval'
+    ))
+    
+    # Mark points above the confidence interval in red
+    above_confidence_interval = [y > upper for y, upper in zip(list(output_data["y"].values())[-len(x):], upper_bound)]
+    fig.add_trace(go.Scatter(
+        x=[x_val for x_val, above in zip(x, above_confidence_interval) if above],
+        y=[y_val for y_val, above in zip(list(output_data["y"].values())[-len(x):], above_confidence_interval) if above],
+        mode='markers',
+        marker=dict(color='red', size=10),
+        name='Above Confidence Interval'
+    ))
+    return fig
+
 # In-sample predictions
 st.header('Step 6: In-sample Predictions')
 with st.spinner('Making in-sample predictions and creating the plot...'):
     # Making in-sample predictions and creating the plot logic...
     # In-sample predictions
-    insample_post_url = "http://54.234.248.225:8000/large_time_model_insample"
+    insample_post_url = os.environ.get('INSAMPLE_LTM_URL')
     insample_data = post_request(insample_post_url, output_data)
 
     fig_insample = create_figure('Current and In-sample Predicted Cloud Costs', 'Date', 'Spend in USD')
