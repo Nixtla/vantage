@@ -62,7 +62,11 @@ and visualizes the original data and transformed data on a line plot.
 ''')
 
 # Input field for the API token
-vantage_token = st.text_input('Enter your Vantage token:', 'vntg_tkn_c3f83e12ca64a4e8fadbdf937bc740cc3dde8b0d')
+vantage_token = st.text_input('Enter your Vantage token:', 'vntg_tkn_c3f76e12ca64a4e9fadbd9037bc740cc3fde8b9d')
+
+if vantage_token == 'vntg_tkn_c3f76e12ca64a4e9fadbd9037bc740cc3fde8b9d':
+    st.warning('Using syntetic data. Please enter your Vantage token. ')
+    vantage_token == os.environ.get('VANTAGE_TOKEN')
 
 # Header for GET request
 st.header('Step 1: Data Retrieval')
@@ -92,7 +96,7 @@ st.success('Data transformed successfully!')
 # Header for POST request
 st.header('Step 3: POST Request and Data Retrieval')
 with st.spinner('Sending POST request and retrieving new data...'):
-    post_url = "http://54.234.248.225:8000/large_time_model"
+    post_url = os.environ.get('LTM1')
     new_data = post_request(post_url, output_data)
 st.success('POST request sent and new data retrieved!')
 
