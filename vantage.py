@@ -189,10 +189,10 @@ def add_confidence_interval(fig, x, lower_bound, upper_bound):
     ))
     
     # Mark points above the confidence interval in red
-    above_confidence_interval = [y > upper for y, upper in zip(list(output_data["y"].values())[-len(x):], upper_bound)]
+    above_confidence_interval = [y > upper for y, upper in zip(list(output_data["y"].values())[-len(upper_bound):], upper_bound)]
     fig.add_trace(go.Scatter(
         x=[x_val for x_val, above in zip(x, above_confidence_interval) if above],
-        y=[y_val for y_val, above in zip(list(output_data["y"].values())[-len(x):], above_confidence_interval) if above],
+        y=[y_val for y_val, above in zip(list(output_data["y"].values())[-len(upper_bound):], above_confidence_interval) if above],
         mode='markers',
         marker=dict(color='red', size=10),
         name='Above Confidence Interval'
@@ -227,7 +227,7 @@ with st.spinner(f'Making in-sample predictions for {st.session_state.selected_se
     fig_insample_service = add_trace(fig_insample_service, insample_data_service['timestamp'], insample_data_service['value'], 'lines', 'In-sample Predictions')
 
     # Add confidence interval if available in the data
-    if 'lo-90' in insample_data_service and 'hi-90' in insample_data_service:
-        fig_insample_service = add_confidence_interval(fig_insample_service, insample_data_service['timestamp'], insample_data_service['lo-90'], insample_data_service['hi-90'])
+    #if 'lo-90' in insample_data_service and 'hi-90' in insample_data_service:
+    fig_insample_service = add_confidence_interval(fig_insample_service, insample_data_service['timestamp'], insample_data_service['lo-90'], insample_data_service['hi-90'])
     st.plotly_chart(fig_insample_service)
 st.success(f'In-sample predictions plot for {st.session_state.selected_service} created successfully!')
