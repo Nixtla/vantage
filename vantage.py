@@ -67,7 +67,7 @@ vantage_token = st.text_input('Enter your Vantage token:', 'vntg_tkn_c3f76e12ca6
 
 if vantage_token == 'vntg_tkn_c3f76e12ca64a4e9fadbd9037bc740cc3fde8b9d':
     st.warning('Using syntetic data. Please enter your Vantage token. ')
-    vantage_token == os.environ.get('VANTAGE_TOKEN')
+    vantage_token = os.environ.get('VANTAGE_TOKEN')
 
 # Header for GET request
 st.header('Step 1: Data Retrieval')
