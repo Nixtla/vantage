@@ -13,7 +13,14 @@ import os
 @st.cache_data(ttl=1000)
 def fetch_data(url, headers):
     response = requests.get(url, headers=headers)
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        st.warning(f'HTTP error occurred: {err}')
+    # Print status code and message
     return response.json()
+
+
 
 
 def create_figure(title, xaxis_title, yaxis_title, yaxis_range=None):
@@ -49,7 +56,12 @@ def add_confidence_interval(fig, x, lo, hi, color='rgba(0,176,246,0.2)'):
 
 @st.cache_data(ttl=15)
 def post_request(url, data):
-    response = requests.post(url, json=data)
+    response = requests.post(url, json=data, headers={"authorization": f"Bearer {os.environ.get('NIXTLA_TOKEN')}"})
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        st.warning(f'HTTP error occurred: {err}')
+        return None
     return response.json()
 
 
@@ -78,7 +90,7 @@ with st.spinner('Fetching data from the API...'):
         "authorization": f"Bearer {vantage_token}"
     }
     data = fetch_data(url, headers)
-st.success('Data fetched successfully!')
+    st.success('Data fetched successfully!')
 
 # Header for Data Transformation
 
@@ -99,7 +111,12 @@ st.header('Step 3: POST Request and Data Retrieval')
 with st.spinner('Sending POST request and retrieving new data...'):
     post_url = os.environ.get('LTM1')
     new_data = post_request(post_url, output_data)
-st.success('POST request sent and new data retrieved!')
+    if new_data:
+        st.success('POST request sent and new data retrieved!')
+    else:
+        st.stop()
+
+
 
 # Header for visualization
 st.header('Step 4: Data Visualization')
