@@ -136,8 +136,32 @@ def add_confidence_interval_anomalies(fig, output_data, x, lower_bound, upper_bo
     ))
     return fig
 
+def create_exogenous_variable(series, horizon):
+    # Convert the input series to a pandas DataFrame
+    df = pd.DataFrame(list(series["y"].items()), columns=['date', 'value'])
+    # Convert the 'date' column to pandas datetime format
+    df['date'] = pd.to_datetime(df['date'])
+    # Get the start and end date from the series
+    start_date = df['date'].min()
+    end_date = df['date'].max()
+    # Generate a list of dates for the entire period, including the horizon
+    date_range = pd.date_range(start=start_date, periods=len(df) + horizon)
+    # Create the exogenous variable dictionary with initial values as 0
+    exogenous_variable = {date.strftime('%Y-%m-%d'): [0] for date in date_range}
+    # Set the value to 1 for the initial date of each month in the exogenous variable
+    exogenous_variable[start_date.strftime('%Y-%m-%d')][0] = 1
+    for i in range(1, len(date_range)):
+        if date_range[i].day == 1:
+            exogenous_variable[date_range[i].strftime('%Y-%m-%d')][0] = 1
+    return exogenous_variable
+
 @st.cache_data(ttl=15)
-def time_gpt(url, data):
+def time_gpt(url, data, add_ex=True):
+    if add_ex:
+        x_dates = create_exogenous_variable(data, data["fh"])
+        data["x"] = x_dates
+    else:
+        data["x"] = {}
     response = requests.post(url, json=data, headers={"authorization": f"Bearer {os.environ.get('NIXTLA_TOKEN')}"})
     try:
         response.raise_for_status()
@@ -222,7 +246,8 @@ if st.button('Get Costs'):
         output_data = {"y": {}, "fh": 30, "level": [90], "finetune_steps": 2}
         for cost in data["costs"]:
             output_data["y"][cost["accrued_at"]] = float(cost["amount"])
-            st.session_state['output_data'] = output_data
+        
+        st.session_state['output_data'] = output_data
         st.success('Costs fetched successfully!')
         st.session_state.processed['output_data'] = output_data
 
@@ -258,7 +283,7 @@ if st.button('Get Costs'):
         # Making in-sample predictions and creating the plot logic...
         # In-sample predictions
         insample_post_url = os.environ.get('INSAMPLE_LTM_URL')
-        insample_data = time_gpt(insample_post_url, output_data)
+        insample_data = time_gpt(insample_post_url, output_data, add_ex=False)
         fig_insample = create_figure('Current and In-sample Predicted Cloud Costs', 'Date', 'Spend in USD')
         fig_insample = add_trace(fig_insample, list(output_data["y"].keys()), list(output_data["y"].values()), 'lines', 'Original Data')
         fig_insample = add_trace(fig_insample, insample_data['timestamp'], insample_data['value'], 'lines', 'In-sample Predictions')
@@ -375,7 +400,7 @@ else:
     with st.spinner(f'Making in-sample predictions for {st.session_state.selected_service} and creating the plot...'):
         # Making in-sample predictions for the selected service and creating the plot logic...
         insample_post_url = os.environ.get('INSAMPLE_LTM_URL')
-        insample_data_service = time_gpt(insample_post_url, output_data_service)
+        insample_data_service = time_gpt(insample_post_url, output_data_service, add_ex=False)
 
         # Create the figure for in-sample predictions
         fig_insample_service = create_figure(f'In-sample Predictions and Actual Costs for {st.session_state.selected_service}', 'Date', 'Spend in USD', [0, max(selected_values)+10])
@@ -386,11 +411,6 @@ else:
         #if 'lo-90' in insample_data_service and 'hi-90' in insample_data_service:
         fig_insample_service = add_confidence_interval_anomalies(fig_insample_service, output_data_service, insample_data_service['timestamp'], insample_data_service['lo-90'], insample_data_service['hi-90'])
         st.plotly_chart(fig_insample_service)
-
-
-
-
-
 
 
 
