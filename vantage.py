@@ -20,7 +20,8 @@ def fetch_data(url, headers):
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as err:
-        st.warning(f'HTTP error occurred: {err}')
+        st.warning(f'HTTP error occurred: {err}. \n Please enter a valid request.')
+        st.stop()
     # Print status code and message
     return response.json()
 
@@ -30,7 +31,8 @@ def fetch_reports(url, headers):
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as err:
-        st.warning(f'HTTP error occurred: {err}')
+        st.warning(f'HTTP error occurred: {err}. \n Please enter a valid request.')
+        st.stop()
     # Print status code and message
     return response.json()
 
@@ -177,20 +179,20 @@ report_id = st.text_input('Enter Report ID:')
 if st.button('Get Costs'):
     # Header for GET request
     with st.spinner('Fetching data from the API...'):
-        url = f"https://api.vantage.sh/v1/reports/{report_id}/costs?grouping=account_id"
+        url = f"https://api.vantage.sh/v1/reports/{report_id}/costs?grouping=account_id&?start_date=2023-03-01"
         headers = {
             "accept": "application/json",
             "authorization": f"Bearer {vantage_token}"
         }
         data = fetch_data(url, headers)
         # Transform the data into a dictionary for future forecasting
-        output_data = {"y": {}, "fh": 30, "level": [90], "finetune_steps": 1}
+        output_data = {"y": {}, "fh": 30, "level": [90], "finetune_steps": 2}
         for cost in data["costs"]:
             output_data["y"][cost["accrued_at"]] = float(cost["amount"])
             st.session_state['output_data'] = output_data
         st.success('Costs fetched successfully!')
 
-    # Step 2# Header for POST request
+    # Step 2# Request forecast from time GPT
     with st.spinner('🔮 Forecasting... 💾 Hang tight! 🚀'):
         post_url = os.environ.get('LTM1')
         new_data = time_gpt(post_url, output_data)
@@ -228,26 +230,46 @@ if st.button('Get Costs'):
 
 # Data for Step 5: Visualization and Forecast for different services 
 st.header('Select a specific service to visualize and forecast its costs')
-with st.spinner('Fetching data for the selected service and creating the plot...'):
+
+start_date = st.text_input('Start date', value='2023-03-01')
+
+grouping = st.text_input('Grouping', value='provider')
+
+report_id = st.text_input('Report ID', value='725')
+
+with st.spinner('Fetching data and creating the plot...'):
     # Fetching data for the selected service and creating the plot logic...
-    url_service = "https://api.vantage.sh/v1/reports/3637/costs?grouping=service&page=3"
+    url_service = f"https://api.vantage.sh/v1/reports/{report_id}/costs?grouping={grouping}&?start_date={start_date}"
     headers = {
         "accept": "application/json",
         "authorization": f"Bearer {vantage_token}"
     }
     data_service = fetch_data(url_service, headers)
-st.success('Plot for the selected service created successfully!')
+
 
 
 
 
 with st.spinner('Transforming the data for the selected service...'):
     # Data transformation
-    service_data = defaultdict(list)
-    for cost in data_service["costs"]:
-        date = pd.to_datetime(cost["accrued_at"])
-        service_data[cost["service"]].append((date, float(cost["amount"])))
-
+    if grouping == 'provider':
+        service_data = defaultdict(list)
+        for cost in data_service["costs"]:
+            date = pd.to_datetime(cost["accrued_at"])
+            service_data[cost["provider"]].append((date, float(cost["amount"])))
+    elif grouping == 'service':
+        service_data = defaultdict(list)
+        for cost in data_service["costs"]:
+            date = pd.to_datetime(cost["accrued_at"])
+            service_data[cost["service"]].append((date, float(cost["amount"])))
+    elif grouping == 'account_id':
+        service_data = defaultdict(list)
+        for cost in data_service["costs"]:
+            date = pd.to_datetime(cost["accrued_at"])
+            service_data[cost["account_id"]].append((date, float(cost["amount"])))
+    else:
+        #Raise error becuase groupig is not supported
+        st.error('Grouping is not supported. Please select a either service, provider or account_id')
 
 
 
@@ -258,7 +280,7 @@ with st.spinner('🔮 Forecasting... 💾 Hang tight! 🚀'):
         st.session_state.selected_service = 0  # default to the first service
 
     # Service selection
-    st.session_state.selected_service = st.selectbox('Select a service:', list(service_data.keys()), st.session_state.selected_service)
+    st.session_state.selected_service = st.selectbox('Select a service or provider:', list(service_data.keys()), st.session_state.selected_service)
     selected_dates, selected_values = zip(*service_data[st.session_state.selected_service])
 
 
@@ -267,7 +289,7 @@ with st.spinner('🔮 Forecasting... 💾 Hang tight! 🚀'):
     fig_service = add_trace(fig_service, selected_dates, selected_values, 'lines', st.session_state.selected_service)
 
     # Prepare data for POST request
-    output_data_service = {"y": {date.strftime('%Y-%m-%d'): value for date, value in zip(selected_dates, selected_values)}, "fh": 30, "level": [90]}
+    output_data_service = {"y": {date.strftime('%Y-%m-%d'): value for date, value in zip(selected_dates, selected_values)}, "fh": 30, "level": [90], 'finetune_steps': 2}
     post_url = os.environ.get('LTM1')
     new_data_service = time_gpt(post_url, output_data_service)
 
