@@ -25,4 +25,4 @@ six==1.16.0
 toml==0.10.2
 tqdm==4.62.3
 urllib3==1.26.7
-werkzeug==2.0.2
+werkzeug==2.2.3
