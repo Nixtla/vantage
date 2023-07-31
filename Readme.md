@@ -31,7 +31,7 @@ git clone https://github.com/Nixtla/vantage.git
 After setting up the environment variables and installing the dependencies, you can run the project using the following command:
 
 ```bash
-streamlit run streamlit.py
+streamlit run vantage.py
 ```
 
 This command will start a local server, and you can access the web application by navigating to the provided URL (usually `http://localhost:8501`) in your web browser 🌐.
