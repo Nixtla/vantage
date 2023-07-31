@@ -18,6 +18,8 @@ In order to run this project, you need to set several environment variables. The
 - `VANTAGE_TOKEN`: Your Vantage API key 🔑
 - `TIMEGPT_TOKEN`: Your Nixtla API key 🔑
 
+Please contact us to get your API keys.
+
 ## Clone the Repository 🔄
 
 To clone the repository, run the following command:
