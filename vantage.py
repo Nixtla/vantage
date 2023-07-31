@@ -358,7 +358,8 @@ if st.button('Forecast costs and Detect anomalies'):
         anomaly_dates = [y_keys[i] for i, (y, upper) in enumerate(zip(y, insample_data['hi-90'])) if y > upper]
 
     # Explaining detected anomalies
-    with st.spinner('🔎 Explaining anomalies with Open AI...'):    
+    with st.spinner('🔎 Explaining anomalies with Open AI... \n 🤖 We use GPT4, so this might take some minutes...'):
+
         st.write(explain_anomalies(anomaly_dates))
         st.balloons()
 
