@@ -2,6 +2,8 @@
 
 Welcome 🙏 to the Vantage+TimeGPT code repository. This project offers a powerful 🔥 tool to predict cloud costs 💰 and detect anomalies with Vantage and Nixtla, leveraging the power of Nixtla's TimeGPT and OpenAI's GPT-4 to provide explanations 💡.
 
+Here is a working version: https://nixtla-vantage.streamlit.app/
+
 ## Prerequisites 📚
 
 Before running 🏃 the project, make sure you have installed the following:
