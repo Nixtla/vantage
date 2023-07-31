@@ -314,6 +314,7 @@ if st.button('Forecast costs and Detect anomalies'):
     # Request forecast from time GPT
     with st.spinner('🔮 Forecasting... 💾 Hang tight! 🚀'):
         post_url = os.environ.get('LTM1')
+        ### HERE IS WHERE THE MAGIC HAPPENS ###
         new_data = time_gpt(post_url, st.session_state.processed['historic_data'], add_ex=True)
         if new_data:
             st.success('✅ Forecasting completed successfully!')
