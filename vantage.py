@@ -443,6 +443,7 @@ else:
         # Making in-sample predictions for the selected service and creating the plot logic...
         insample_post_url = os.environ.get('INSAMPLE_LTM_URL_PROD')
         insample_data_service = time_gpt(insample_post_url, historic_data_grouped, add_ex=False)
+        insample_data_service = insample_data_service['data']
 
         # Create the figure for in-sample predictions
         fig_insample_service = create_figure(f'In-sample Predictions and Actual Costs for {st.session_state.selected_service}', 'Date', 'Spend in USD', [0, max(selected_values)+10])
