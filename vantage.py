@@ -167,17 +167,19 @@ def create_exogenous_variable(series, horizon):
     return exogenous_variable
 
 @st.cache_data(ttl=15)
-def time_gpt(url, data, add_ex=True):
+def time_gpt(url, data, add_ex=True, token=os.environ.get('NIXTLA_TOKEN_PROD')):
     """Fetch time series forecasting results from Nixtla."""
     if add_ex:
         # If add_ex is True, create and add the exogenous variable to the data
         data["x"] = create_exogenous_variable(data, data["fh"])
     else:
         data["x"] = {}
-    
+    st.header('PAYLOAD')
+    st.write(data)
     # Send a POST request to the specified URL.
-    response = requests.post(url, json=data, headers={"authorization": f"Bearer {os.environ.get('NIXTLA_TOKEN')}"})
-    
+    response = requests.post(url, json=data, headers={"authorization": f"Bearer {token}"})
+    st.header('RESPONSE')
+    st.write(response.json())
     try:
         # If the response indicates an error, raise an exception.
         response.raise_for_status()
@@ -313,11 +315,16 @@ if st.button('Forecast costs and Detect anomalies'):
         st.stop()
     # Request forecast from time GPT
     with st.spinner('🔮 Forecasting... 💾 Hang tight! 🚀'):
-        post_url = os.environ.get('LTM1')
+        post_url = os.environ.get('LTM1_PROD')
         ### HERE IS WHERE THE MAGIC HAPPENS ###
+        #st.header('PAYLOAD')
+        #st.write(st.session_state.processed['historic_data'])
         new_data = time_gpt(post_url, st.session_state.processed['historic_data'], add_ex=True)
+        #st.header('RESPONSE')
+        #st.write(new_data)
         if new_data:
             st.success('✅ Forecasting completed successfully!')
+            new_data = new_data['data']
         else:
             st.stop()
 
@@ -328,6 +335,7 @@ if st.button('Forecast costs and Detect anomalies'):
         fig = add_trace(fig, new_data['timestamp'], new_data['value'], 'lines', 'Forecasted Data')
         fig = add_confidence_interval(fig, new_data['timestamp'], new_data['lo-90'], new_data['hi-90'])
         st.plotly_chart(fig)
+        
 
 
     ################################################
@@ -342,8 +350,9 @@ if st.button('Forecast costs and Detect anomalies'):
 
     with st.spinner('🔎 Detecting anomalies...'):
         # Fetching in-sample predictions
-        insample_post_url = os.environ.get('INSAMPLE_LTM_URL')
-        insample_data = time_gpt(insample_post_url, st.session_state.processed['historic_data'], add_ex=False)
+        insample_post_url = os.environ.get('INSAMPLE_LTM_URL_PROD')
+        insample_data = time_gpt(insample_post_url, st.session_state.processed['historic_data'], add_ex=False, token=os.environ.get('NIXTLA_TOKEN_PROD'))
+        insample_data = insample_data['data']
 
         # Creating the plot for in-sample predictions
         fig_insample = create_figure('Current and In-sample Predicted Cloud Costs', 'Date', 'Spend in USD')
