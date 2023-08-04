@@ -174,12 +174,8 @@ def time_gpt(url, data, add_ex=True, token=os.environ.get('NIXTLA_TOKEN_PROD')):
         data["x"] = create_exogenous_variable(data, data["fh"])
     else:
         data["x"] = {}
-    st.header('PAYLOAD')
-    st.write(data)
     # Send a POST request to the specified URL.
     response = requests.post(url, json=data, headers={"authorization": f"Bearer {token}"})
-    st.header('RESPONSE')
-    st.write(response.json())
     try:
         # If the response indicates an error, raise an exception.
         response.raise_for_status()
