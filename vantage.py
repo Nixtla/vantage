@@ -440,7 +440,7 @@ else:
     st.header(f'Anomaly detections for {st.session_state.selected_service}')
     with st.spinner(f'Analyzing {st.session_state.selected_service} and detecting anomalies'):
         # Making in-sample predictions for the selected service and creating the plot logic...
-        insample_post_url = os.environ.get('INSAMPLE_LTM_URL')
+        insample_post_url = os.environ.get('INSAMPLE_LTM_URL_PROD')
         insample_data_service = time_gpt(insample_post_url, historic_data_grouped, add_ex=False)
 
         # Create the figure for in-sample predictions
