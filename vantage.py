@@ -419,7 +419,7 @@ else:
 
         # Prepare the data for the POST request.
         historic_data_grouped = {"y": {date.strftime('%Y-%m-%d'): value for date, value in zip(selected_dates, selected_values)}, "fh": 30, "level": [90], 'finetune_steps': 2}
-        post_url = os.environ.get('LTM1')
+        post_url = os.environ.get('LTM1_PROD_URL')
         new_data_grouped = time_gpt(post_url, historic_data_grouped)
 
         # Extract the forecast and confidence interval data.
